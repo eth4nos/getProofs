@@ -34,7 +34,7 @@ func (s *PublicBlockChainAPI) GetProof(ctx context.Context, address common.Addre
   // ...
   
 	// create the accountProof
-	accountProof, proofErr := state.GetProof(address)
+	accountProof, _ := state.GetProof(address)
 	// if proofErr != nil {
 	// 	return nil, proofErr
 	// }
