@@ -29,10 +29,14 @@ var to = Number(process.argv[4]);       // 6011172;
 // Get Proofs
 var proofs = getProofs(address, storageKey, from, to);
 Promise.all(proofs).then((res) => {
-    var accountProofs = [];
+    var accountProofs = [];    
     res.forEach((proof) => {
-        // console.log(proof);       
+        
+        console.log(proof);
+        
+        
         accountProofs.push(proof.accountProof);
+        
     });
 
     /*
@@ -47,39 +51,8 @@ Promise.all(proofs).then((res) => {
         from,
         accountProofs
     ];
-    // console.log(preRlp);
 
-    var rlped = rlp.encode(preRlp);
-    console.log(rlped);
-
-    web3.eth.getAccounts().then(accounts => {
-        // console.log(accounts);
-        unlockAccount(accounts[0], "12341234");
-
-        web3.eth.sendTransaction({
-            from: accounts[0],
-            to: "0x0123456789012345678901234567890123456789",
-            gas: 21000000,
-            data: "0x" + toHexString(rlped),
-        }, function (err, hash) {
-            console.log(hash);
-        });
-    });
-
+    // print
+    console.log(preRlp);
+    console.log(rlp.encode(preRlp));
 });
-
-function toHexString(byteArray) {
-    return Array.from(byteArray, function (byte) {
-        return ('0' + (byte & 0xFF).toString(16)).slice(-2);
-    }).join('')
-}
-
-function unlockAccount(address, password) {
-    // console.log("> Unlocking coinbase account");
-    try {
-        web3.eth.personal.unlockAccount(address, password, 0)
-    } catch (e) {
-        console.log(e);
-        return;
-    }
-}
