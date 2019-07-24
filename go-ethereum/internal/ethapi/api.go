@@ -580,6 +580,14 @@ func (s *PublicBlockChainAPI) GetProof(ctx context.Context, address common.Addre
 	codeHash := state.GetCodeHash(address)
 	storageProof := make([]StorageResult, len(storageKeys))
 
+	// if we have a storageTrie, (which means the account exists), we can update the storagehash
+	if storageTrie != nil {
+		storageHash = storageTrie.Hash()
+	} else {
+		// no storageTrie means the account does not exist, so the codeHash is the hash of an empty bytearray.
+		codeHash = crypto.Keccak256Hash(nil)
+	}
+
 	// Bloom Filter
 	block, err := s.b.BlockByNumber(ctx, blockNr)
 	if block != nil {
@@ -603,14 +611,6 @@ func (s *PublicBlockChainAPI) GetProof(ctx context.Context, address common.Addre
 				StorageProof: storageProof,
 			}, state.Error()
 		}
-	}
-
-	// if we have a storageTrie, (which means the account exists), we can update the storagehash
-	if storageTrie != nil {
-		storageHash = storageTrie.Hash()
-	} else {
-		// no storageTrie means the account does not exist, so the codeHash is the hash of an empty bytearray.
-		codeHash = crypto.Keccak256Hash(nil)
 	}
 
 	// create the proof for the storageKeys
