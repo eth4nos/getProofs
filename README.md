@@ -39,7 +39,7 @@ func (s *PublicBlockChainAPI) GetProof(ctx context.Context, address common.Addre
 	block, err := s.b.BlockByNumber(ctx, blockNr)
 	if block != nil {
 		bloom := block.Active(address)
-		if bloom {
+		if !bloom {
 			return &BloomResult{
 				Address:    address,
 				StateBloom: block.Header().StateBloom,
