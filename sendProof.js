@@ -1,7 +1,7 @@
 const rlp = require('rlp');
 const Web3 = require("web3");
 
-const provider = "http://localhost:8081";
+const provider = "http://localhost:8877";
 // const provider = "https://ropsten.infura.io";
 const web3 = new Web3(provider);
 
@@ -33,7 +33,9 @@ Promise.all(proofs).then((res) => {
     var isBlooms = [];
     res.forEach((proof) => {
         // console.log(proof);
-        accountProofs.push(proof.accountProof);
+	if (!proof.isBloom) {
+        	accountProofs.push(proof.accountProof);
+	}
         isBlooms.push(proof.isBloom ? 1 : 0);
     });
 
@@ -57,7 +59,7 @@ Promise.all(proofs).then((res) => {
 
     web3.eth.getAccounts().then(accounts => {
         var address = accounts[0];
-        var password = "12341234"
+        var password = "1234"
         web3.eth.personal.unlockAccount(address, password, 0).then(()=>{
             web3.eth.sendTransaction({
                 from: address,
