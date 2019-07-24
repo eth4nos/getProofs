@@ -566,30 +566,34 @@ type StorageResult struct {
 	Value *hexutil.Big `json:"value"`
 	Proof []string     `json:"proof"`
 }
-type BloomResult struct {
-	Address    common.Address `json:"address"`
-	StateBloom types.Bloom    `json:"stateBloom"`
-}
 
 // GetProof returns the Merkle-proof for a given account and optionally some storage keys.
-func (s *PublicBlockChainAPI) GetProof(ctx context.Context, address common.Address, storageKeys []string, blockNr rpc.BlockNumber) (interface{}, error) {
+func (s *PublicBlockChainAPI) GetProof(ctx context.Context, address common.Address, storageKeys []string, blockNr rpc.BlockNumber) (*AccountResult, error) {
+	state, header, err := s.b.StateAndHeaderByNumber(ctx, blockNr)
+	if state == nil || err != nil {
+		return nil, err
+	}
+
 	// Bloom Filter
 	block, err := s.b.BlockByNumber(ctx, blockNr)
 	if block != nil {
 		bloom := block.Active(address)
 		if !bloom {
-			log.Info("Bloom: Address Inactive", "stateBloom", block.Header().StateBloom)
+			log.Info("Bloom: Address Inactive", "stateBloom", header.StateBloom)
 
-			return &BloomResult{
-				Address:    address,
-				StateBloom: block.Header().StateBloom,
-			}, nil
+			var d []byte
+			header.StateBloom.SetBytes(d)
+
+			return &AccountResult{
+				Address:      address,
+				AccountProof: []string{common.ToHex(d)},
+				Balance:      (*hexutil.Big)(big.NewInt(0)),
+				CodeHash:     types.EmptyRootHash,
+				Nonce:        hexutil.Uint64(state.GetNonce(address)),
+				StorageHash:  types.EmptyRootHash,
+				StorageProof: []StorageResult{},
+			}, state.Error()
 		}
-	}
-
-	state, _, err := s.b.StateAndHeaderByNumber(ctx, blockNr)
-	if state == nil || err != nil {
-		return nil, err
 	}
 
 	storageTrie := state.StorageTrie(address)
