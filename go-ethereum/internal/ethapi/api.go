@@ -555,6 +555,7 @@ func (s *PublicBlockChainAPI) GetBalance(ctx context.Context, address common.Add
 type AccountResult struct {
 	Address      common.Address  `json:"address"`
 	AccountProof []string        `json:"accountProof"`
+	IsBloom      bool            `json:"isBloom"`
 	Balance      *hexutil.Big    `json:"balance"`
 	CodeHash     common.Hash     `json:"codeHash"`
 	Nonce        hexutil.Uint64  `json:"nonce"`
@@ -574,12 +575,19 @@ func (s *PublicBlockChainAPI) GetProof(ctx context.Context, address common.Addre
 		return nil, err
 	}
 
+	storageTrie := state.StorageTrie(address)
+	storageHash := types.EmptyRootHash
+	codeHash := state.GetCodeHash(address)
+	storageProof := make([]StorageResult, len(storageKeys))
+
 	// Bloom Filter
 	block, err := s.b.BlockByNumber(ctx, blockNr)
 	if block != nil {
 		bloom := block.Active(address)
+		log.Info("Bloom", "bloom", bloom)
+
 		if !bloom {
-			log.Info("Bloom: Address Inactive", "stateBloom", header.StateBloom)
+			log.Info("Bloom: Address Inactive", "stateBloom", header.StateBloom, "address", address)
 
 			var d []byte
 			header.StateBloom.SetBytes(d)
@@ -587,19 +595,15 @@ func (s *PublicBlockChainAPI) GetProof(ctx context.Context, address common.Addre
 			return &AccountResult{
 				Address:      address,
 				AccountProof: []string{common.ToHex(d)},
-				Balance:      (*hexutil.Big)(big.NewInt(0)),
-				CodeHash:     types.EmptyRootHash,
+				IsBloom:      true,
+				Balance:      (*hexutil.Big)(state.GetBalance(address)),
+				CodeHash:     codeHash,
 				Nonce:        hexutil.Uint64(state.GetNonce(address)),
-				StorageHash:  types.EmptyRootHash,
-				StorageProof: []StorageResult{},
+				StorageHash:  storageHash,
+				StorageProof: storageProof,
 			}, state.Error()
 		}
 	}
-
-	storageTrie := state.StorageTrie(address)
-	storageHash := types.EmptyRootHash
-	codeHash := state.GetCodeHash(address)
-	storageProof := make([]StorageResult, len(storageKeys))
 
 	// if we have a storageTrie, (which means the account exists), we can update the storagehash
 	if storageTrie != nil {
@@ -632,6 +636,7 @@ func (s *PublicBlockChainAPI) GetProof(ctx context.Context, address common.Addre
 	return &AccountResult{
 		Address:      address,
 		AccountProof: common.ToHexArray(accountProof),
+		IsBloom:      false,
 		Balance:      (*hexutil.Big)(state.GetBalance(address)),
 		CodeHash:     codeHash,
 		Nonce:        hexutil.Uint64(state.GetNonce(address)),
