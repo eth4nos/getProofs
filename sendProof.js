@@ -66,6 +66,7 @@ Promise.all(proofs).then((res) => {
                 to: "0x0123456789012345678901234567890123456789",
                 gas: 21000000,
                 data: "0x" + toHexString(rlped),
+		value: 1
             }, function (err, hash) {
                 console.log("> txHash   : ", hash);
             });
