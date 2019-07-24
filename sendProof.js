@@ -6,7 +6,7 @@ const provider = "http://localhost:8081";
 const web3 = new Web3(provider);
 
 // values
-const cpInterval = 10;
+const cpInterval = 5;
 
 // functions
 function getProofs(address, storageKey, startBlockNumber, endBlockNumber) {
@@ -30,9 +30,11 @@ var to = Number(process.argv[4]);       // 6011172;
 var proofs = getProofs(address, storageKey, from, to);
 Promise.all(proofs).then((res) => {
     var accountProofs = [];
+    var isBlooms = [];
     res.forEach((proof) => {
-        // console.log(proof);       
+        // console.log(proof);
         accountProofs.push(proof.accountProof);
+        isBlooms.push(proof.isBloom ? 1 : 0);
     });
 
     /*
@@ -45,12 +47,13 @@ Promise.all(proofs).then((res) => {
     var preRlp = [
         address,
         from,
-        accountProofs
+        accountProofs,
+        isBlooms
     ];
-    // console.log(preRlp);
+    console.log("> preRlp   : ", preRlp);
 
     var rlped = rlp.encode(preRlp);
-    console.log(rlped);
+    console.log("> rlped    : ", rlped);
 
     web3.eth.getAccounts().then(accounts => {
         var address = accounts[0];
@@ -62,7 +65,7 @@ Promise.all(proofs).then((res) => {
                 gas: 21000000,
                 data: "0x" + toHexString(rlped),
             }, function (err, hash) {
-                console.log(hash);
+                console.log("> txHash   : ", hash);
             });
         });
     });
