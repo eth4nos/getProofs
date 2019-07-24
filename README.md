@@ -1,7 +1,17 @@
 # How to Use
 
 ```bash
+node [js_filename] [tx_hash] [start_block_number] [end_block_number]
+```
+
+## Examples
+
+```bash
 node getProofs.js 0x7224769b9eE714dAA816053732D6Ed0AA35714CB 6036710 6036722
+```
+
+```bash
+node sendProof.js 0x1111111111111111111111111111111111111234 2 13
 ```
 
 # Modifying Geth
