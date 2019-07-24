@@ -1,10 +1,10 @@
 # How to Use
 
-**Use sendProof.js**
-
 ```bash
 node [js_filename] [tx_hash] [start_block_number] [end_block_number]
 ```
+
+* **Use sendProof.js**
 
 ## Examples
 
