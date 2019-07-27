@@ -6,7 +6,7 @@ const provider = "http://localhost:8081";
 const web3 = new Web3(provider);
 
 // values
-const cpInterval = 10;
+const cpInterval = 5;
 
 // functions
 function getProofs(address, storageKey, startBlockNumber, endBlockNumber) {
@@ -31,12 +31,8 @@ var proofs = getProofs(address, storageKey, from, to);
 Promise.all(proofs).then((res) => {
     var accountProofs = [];    
     res.forEach((proof) => {
-        
-        console.log(proof);
-        
-        
+        // console.log(proof);
         accountProofs.push(proof.accountProof);
-        
     });
 
     /*
