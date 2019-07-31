@@ -1,7 +1,7 @@
 const rlp = require('rlp');
 const Web3 = require("web3");
 
-const provider = "http://localhost:8877";
+const provider = "http://localhost:8081";
 // const provider = "https://ropsten.infura.io";
 const web3 = new Web3(provider);
 
@@ -74,4 +74,3 @@ function toHexString(byteArray) {
         return ('0' + (byte & 0xFF).toString(16)).slice(-2);
     }).join('')
 }
-
