@@ -14,10 +14,11 @@ let endBlockNumber = Number(process.argv[3]);
         for (let i = startBlockNumber; i <= endBlockNumber; i++) {
             let blockNumber = await web3.eth.getBlockNumber();
         
-            if (blockNumber == i) {
+            if (blockNumber + startBlockNumber == i) {
                 let block = await findOne('blocks', { number: i });
-                // console.log(block)
 
+                console.log("current block number", blockNumber);
+                console.log("iter block number", i-startBlockNumber);
                 let txNumber = (block.to).length;
                 for (let j = 0; j < txNumber; j++) {
                     // let from = (block.from)[j], fromIndex = (await findOne('accounts', { address: from })).number;
@@ -40,21 +41,18 @@ let endBlockNumber = Number(process.argv[3]);
                                 value: 1,
                                 gas: 21000,
                             }, function (err, hash) {
-                                // console.log("> txHash   : ", hash);
+                                console.log("> txHash   : ", hash);
                             });
                         });
                     });
                 }
             }
             else {
-                function sleep(ms) {
-                    return new Promise(resolve => setTimeout(resolve, ms));
-                }
-
+		// wait for mining
                 i--;
-                console.log("The current block number does not match the expected block number.");
-                console.log("Pending...")
-                await sleep(1000);
+                //console.log("The current block number does not match the expected block number.");
+                //console.log("Pending...")
+                //console.log("iter block number", i-startBlockNumber);
             }
 
             // console.log(i, endBlockNumber);
