@@ -15,38 +15,19 @@ let endBlockNumber = Number(process.argv[3]);
             let blockNumber = await web3.eth.getBlockNumber();
 
             if (blockNumber + startBlockNumber == i) {
-                let block = await findOne('blocks', { number: i });
-                // console.log(block)
+                let transactions = await findMany('transactions_test', { blockNum: i });
 
-                console.log("current block number", blockNumber);
-                console.log("iter block number", i - startBlockNumber);
+                console.log("(current / iter)", blockNumber, i - startBlockNumber);
 
-                let toNumber = (block.to).length;
-                let fromNumber = (block.from).length;
-                let txNumber = toNumber > fromNumber ? toNumber : fromNumber;
-
+                let txNumber = transactions.length;
                 for (let j = 0; j < txNumber; j++) {
-                    // let from = (block.from)[j], fromIndex = (await findOne('accounts', { address: from })).number;
-                    // let to = (block.to)[j], toIndex = (await findOne('accounts', { address: to })).number;
-                    // console.log(fromIndex, toIndex);
-
                     web3.eth.getAccounts().then(accounts => {
                         var password = "1234"
 
-                        let to = (block.to)[j];
-                        if (to == undefined) {
-                            // to = (block.to)[0];
-                            to = accounts[0];
-                        }
-                        let delegatedFrom = (block.from)[j];
-                        if (delegatedFrom == undefined) {
-                            // from = (block.from)[j];
-                            delegatedFrom = accounts[0];
-                        }
+                        let to = (transactions[j]).to;
+                        let delegatedFrom = (transactions[j]).from;
                         let from = accounts[0];
 
-                        // var fromAddress = accounts[fromIndex];
-                        // var toAddress = accounts[toIndex];
                         var fromAddress = from;
                         var toAddress = to;
 
