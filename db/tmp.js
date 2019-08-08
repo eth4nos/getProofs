@@ -6,6 +6,10 @@ const provider = "http://localhost:8081";
 // const provider = "https://ropsten.infura.io";
 const web3 = new Web3(provider);
 
+const { exec } = require("child_process");
+const SIZE_CHECK_EPOCH = 5 // Size check epoch
+const PATH = "/data/db_full/geth/chaindata"; // DB directory
+
 let startBlockNumber = Number(process.argv[2]);
 let endBlockNumber = Number(process.argv[3]);
 
@@ -14,46 +18,29 @@ let endBlockNumber = Number(process.argv[3]);
         for (let i = startBlockNumber; i <= endBlockNumber; i++) {
             let blockNumber = await web3.eth.getBlockNumber();
 
+            // Check storage size every epoch before sweeping
+            if (blockNumber % SIZE_CHECK_EPOCH == 0) {
+                exec('printf \"' + blockNumber + '	\" >> storageSize')
+                exec('du -sch ' + PATH + ' | cut -f1 | head -n 1 >> storageSize')
+            }
+
             if (blockNumber + startBlockNumber == i) {
-                let block = await findOne('blocks', { number: i });
-                // console.log(block)
+                let transactions = await findMany('transactions_test', { blockNum: i });
+                console.log("(current / iter)", blockNumber, "/", i - startBlockNumber);
 
-                console.log("current block number", blockNumber);
-                console.log("iter block number", i - startBlockNumber);
-
-                let toNumber = (block.to).length;
-                let fromNumber = (block.from).length;
-                let txNumber = toNumber > fromNumber ? toNumber : fromNumber;
-
+                let txNumber = (transactions != undefined ? transactions.length : 0);
                 for (let j = 0; j < txNumber; j++) {
-                    // let from = (block.from)[j], fromIndex = (await findOne('accounts', { address: from })).number;
-                    // let to = (block.to)[j], toIndex = (await findOne('accounts', { address: to })).number;
-                    // console.log(fromIndex, toIndex);
-
                     web3.eth.getAccounts().then(accounts => {
                         var password = "1234"
 
-                        let to = (block.to)[j];
-                        if (to == undefined) {
-                            // to = (block.to)[0];
-                            to = accounts[0];
-                        }
-                        let delegatedFrom = (block.from)[j];
-                        if (delegatedFrom == undefined) {
-                            // from = (block.from)[j];
-                            delegatedFrom = accounts[0];
-                        }
+                        let to = (transactions[j]).to;
+                        let delegatedFrom = (transactions[j]).from;
                         let from = accounts[0];
 
-                        // var fromAddress = accounts[fromIndex];
-                        // var toAddress = accounts[toIndex];
-                        var fromAddress = from;
-                        var toAddress = to;
-
-                        web3.eth.personal.unlockAccount(fromAddress, password, 3).then(() => {
+                        web3.eth.personal.unlockAccount(from, password, 10).then(() => {                          
                             web3.eth.sendTransaction({
-                                from: fromAddress,
-                                to: toAddress,
+                                from: from,
+                                to: to,
                                 value: 1,
                                 gas: 2100000,
                                 data: delegatedFrom
