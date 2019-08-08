@@ -16,7 +16,7 @@ let endBlockNumber = Number(process.argv[3]);
 
             if (blockNumber + startBlockNumber == i) {
                 let block = await findOne('blocks', { number: i });
-                console.log(block)
+                // console.log(block)
 
                 console.log("current block number", blockNumber);
                 console.log("iter block number", i - startBlockNumber);
