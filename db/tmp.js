@@ -13,31 +13,38 @@ const PATH = "/data/db_full/geth/chaindata"; // DB directory
 let startBlockNumber = Number(process.argv[2]);
 let endBlockNumber = Number(process.argv[3]);
 
-(async () => {
-    try {
-        for (let i = startBlockNumber; i <= endBlockNumber; i++) {
-            let blockNumber = await web3.eth.getBlockNumber();
+web3.eth.getAccounts().then(accounts => {
+    var password = "1234"
+    let from = accounts[0];
 
-            // Check storage size every epoch before sweeping
-            if (blockNumber % SIZE_CHECK_EPOCH == 0) {
-                exec('printf \"' + blockNumber + '	\" >> storageSize')
-                exec('du -sch ' + PATH + ' | cut -f1 | head -n 1 >> storageSize')
-            }
+    web3.eth.personal.unlockAccount(from, password, 0).then(() => {
+        (async () => {
+            try {
+                for (let i = startBlockNumber; i <= endBlockNumber; i++) {
+                    let blockNumber = await web3.eth.getBlockNumber();
 
-            if (blockNumber + startBlockNumber == i) {
-                let transactions = await findMany('transactions_test', { blockNum: i });
-                console.log("(current / iter)", blockNumber, "/", i - startBlockNumber);
+                    // Check storage size every epoch before sweeping
+                    if (blockNumber % SIZE_CHECK_EPOCH == 0) {
+                        exec('printf \"' + blockNumber + '	\" >> storageSize')
+                        exec('du -sc ' + PATH + ' | cut -f1 | head -n 1 >> storageSize')
+                    }
 
-                let txNumber = (transactions != undefined ? transactions.length : 0);
-                for (let j = 0; j < txNumber; j++) {
-                    web3.eth.getAccounts().then(accounts => {
-                        var password = "1234"
+                    if (blockNumber + startBlockNumber == i) {
+                        let transactions = await findMany('transactions_test', { blockNum: i });
+                        console.log("(current / iter)", blockNumber, "/", i - startBlockNumber);
 
-                        let to = (transactions[j]).to;
-                        let delegatedFrom = (transactions[j]).from;
-                        let from = accounts[0];
+                        let txNumber = (transactions != undefined ? transactions.length : 0);
+                        
+                        
+                        for (let j = 0; j < txNumber; j++) {
+                            // web3.eth.getAccounts().then(accounts => {
 
-                        web3.eth.personal.unlockAccount(from, password, 10).then(() => {                          
+
+                            let to = (transactions[j]).to;
+                            let delegatedFrom = (transactions[j]).from;
+
+
+                            // web3.eth.personal.unlockAccount(from, password, 10).then(() => {                          
                             web3.eth.sendTransaction({
                                 from: from,
                                 to: to,
@@ -46,23 +53,25 @@ let endBlockNumber = Number(process.argv[3]);
                                 data: delegatedFrom
                             }, function (err, hash) {
                                 // console.log("> txHash: ", hash, "delegatedFrom: ", delegatedFrom, "to: ", toAddress, "from: ", from);
-                                console.log("> txHash: ", hash);
+                                console.log("> txHash", j, ":", hash);
                             });
-                        });
-                    });
-                }
-            }
-            else {
-                // wait for mining
-                i--;
-                //console.log("The current block number does not match the expected block number.");
-                //console.log("Pending...")
-                //console.log("iter block number", i-startBlockNumber);
-            }
+                            // });
+                            //});
+                        }
+                    }
+                    else {
+                        // wait for mining
+                        i--;
+                        //console.log("The current block number does not match the expected block number.");
+                        //console.log("Pending...")
+                        //console.log("iter block number", i-startBlockNumber);
+                    }
 
-            // console.log(i, endBlockNumber);
-        }
-    } catch (err) {
-        return console.error(err);
-    }
-})();
+                    // console.log(i, endBlockNumber);
+                }
+            } catch (err) {
+                return console.error(err);
+            }
+        })();
+    });
+});
