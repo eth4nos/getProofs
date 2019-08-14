@@ -1,6 +1,6 @@
 const MongoClient = require('mongodb').MongoClient;
 
-const url = 'mongodb://satoshi.snu.ac.kr:27017';
+const url = 'mongodb://localhost:27017';
 // Database Name
 const dbName = 'eth-analysis';
 
