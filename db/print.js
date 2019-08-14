@@ -17,8 +17,11 @@ const {insertOne, findOne, findLastOne, findMany, count}  = require('./mongoAPIs
         // let block = await findOne('blocks', {number: 1000000});
         // console.log(block);
 
-        let accounts = await findMany('accounts');
-        console.log(accounts);
+        let transactions = await findMany('transactions_test', { blockNum: 7000001 });
+	    console.log(transactions);        
+
+	    // let accounts = await findMany('accounts');
+        // console.log(accounts);
 
         // let activeAccounts = await findMany('activeAccounts');
         // console.log(activeAccounts);
