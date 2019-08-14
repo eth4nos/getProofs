@@ -13,7 +13,7 @@ const { exec } = require("child_process");
 const SIZE_CHECK_EPOCH = 5 // Size check epoch
 const sizeFileName = "storage_" + startBlockNumber + "_" + endBlockNumber
 var fs = require('fs');
-fs.unlinkSync(sizeFileName);
+fs.unlinkSync(sizeFileName); // remove this file to reset
 
 const PATH = "/data/db_full/geth/chaindata"; // DB directory
 
