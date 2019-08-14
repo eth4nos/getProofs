@@ -6,12 +6,17 @@ const provider = "http://localhost:8081";
 // const provider = "https://ropsten.infura.io";
 const web3 = new Web3(provider);
 
-const { exec } = require("child_process");
-const SIZE_CHECK_EPOCH = 5 // Size check epoch
-const PATH = "/data/db_full/geth/chaindata"; // DB directory
-
 let startBlockNumber = Number(process.argv[2]);
 let endBlockNumber = Number(process.argv[3]);
+
+const { exec } = require("child_process");
+const SIZE_CHECK_EPOCH = 5 // Size check epoch
+const sizeFileName = "storage_" + startBlockNumber + "_" + endBlockNumber
+var fs = require('fs');
+fs.unlinkSync(sizeFileName);
+
+const PATH = "/data/db_full/geth/chaindata"; // DB directory
+
 
 const promisify = (inner) => {
     return new Promise(async (resolve, reject) => {
@@ -35,9 +40,11 @@ function sendTx(from, to, value, gas, delegatedFrom) {
             resolve(hash);
         })
         .on('receipt', function(receipt){
-            console.log('receipt', receipt);
+            //console.log('receipt', receipt);
         })
-        .on('confirmation', function(confirmationNumber, receipt){ console.log(confirmationNumber, receipt); })
+        .on('confirmation', function(confirmationNumber, receipt){ 
+            //console.log('confirmation', confirmationNumber, receipt);
+        })
         .on('error', () => {
             reject();
         });
@@ -60,15 +67,19 @@ function sendTx(from, to, value, gas, delegatedFrom) {
 
             // Check storage size at every epoch
             if (blockNumber % SIZE_CHECK_EPOCH == 0) {
-                exec('printf \"' + blockNumber + '	\" >> storageSize')
-                exec('du -sc ' + PATH + ' | cut -f1 | head -n 1 >> storageSize')
+                //exec('printf \"' + blockNumber + '	\" >> storageSize')
+                //exec('du -sc ' + PATH + ' | cut -f1 | head -n 1 >> storageSize')
+
+                exec('printf \"' + blockNumber + '	\" >>' + sizeFileName)
+                exec('du -sc ' + PATH + ' | cut -f1 | head -n 1 >>' + sizeFileName)
             }
 
             // get transactions to send from mongodb
             let transactions = await findMany('transactions_test', { blockNum: i });
             let txNumber = (transactions != undefined ? transactions.length : 0);
             
-            console.log("ethereum block number:", blockNumber, "/ actual block number:", i - 1);
+            console.log("\nethereum block number:", blockNumber, "/ actual block number:", i - 1);
+            console.log("start sending", txNumber, "transactions for block", blockNumber)
 
             for (let j = 0; j < txNumber; j++) {
 
@@ -84,4 +95,7 @@ function sendTx(from, to, value, gas, delegatedFrom) {
             i--;
         }
     }
+
+    console.log("finish! can terminate program")
+
 })();
